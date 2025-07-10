@@ -24,11 +24,7 @@ const AdminSidebar = () => {
     },
   ];
 
-  const handleLogout = () => {
-    localStorage.clear();
-    alert("Logged out successfully!");
-    navigate("/login");
-  };
+
 
   return (
     <aside className="w-64 bg-white border-r border-gray-200 shadow-md fixed left-0 top-0 h-full z-50">
@@ -56,14 +52,7 @@ const AdminSidebar = () => {
           );
         })}
 
-        {/* ✅ Logout Button */}
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-3 w-full mt-6 px-4 py-2 rounded-lg text-gray-700 hover:bg-red-100 hover:text-red-600 transition-all"
-        >
-          <LogOut size={18} />
-          <span className="font-medium">Logout</span>
-        </button>
+     
       </nav>
     </aside>
   );

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Pencil, Trash2, Eye } from "lucide-react";
+import { Pencil, Trash2, Eye, Users } from "lucide-react";
 import AdminSidebar from "./AdminSidebar";
+import Header from "./Header";
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -17,45 +18,39 @@ const UserManagement = () => {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get("http://127.0.0.1:8000/users", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const res = await axios.get("http://127.0.0.1:8000/users", {
+        headers: { Authorization: `Bearer ${token}` },
       });
-      if (Array.isArray(response.data.users)) {
-        setUsers(response.data.users);
+      if (Array.isArray(res.data.users)) {
+        setUsers(res.data.users);
       }
-    } catch (error) {
-      console.error("Fetch error:", error);
+    } catch (err) {
+      console.error("Fetch error:", err);
     }
   };
 
-  const toggleStatus = async (userId) => {
+  const toggleStatus = async (id) => {
     try {
       const token = localStorage.getItem("token");
-      await axios.patch(
-        `http://127.0.0.1:8000/admin/users/${userId}/toggle-status`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      fetchUsers();
-    } catch (error) {
-      console.error("Status toggle failed:", error);
-    }
-  };
-
-  const deleteUser = async (userId) => {
-    if (!window.confirm("Are you sure you want to delete this user?")) return;
-    try {
-      const token = localStorage.getItem("token");
-      await axios.delete(`http://127.0.0.1:8000/admin/users/${userId}`, {
+      await axios.patch(`http://127.0.0.1:8000/admin/users/${id}/toggle-status`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchUsers();
-    } catch (error) {
-      console.error("Delete failed:", error);
+    } catch (err) {
+      console.error("Toggle error:", err);
+    }
+  };
+
+  const deleteUser = async (id) => {
+    if (!window.confirm("Delete this user?")) return;
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`http://127.0.0.1:8000/admin/users/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      fetchUsers();
+    } catch (err) {
+      console.error("Delete failed:", err);
     }
   };
 
@@ -63,7 +58,7 @@ const UserManagement = () => {
     setCurrentUser({
       ...user,
       full_name: user.name,
-      password: "supersecret", // You can update this dynamically if needed
+      password: "supersecret", // You may change this
     });
     setEditModalOpen(true);
   };
@@ -77,41 +72,36 @@ const UserManagement = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
-      await axios.put(
-        `http://127.0.0.1:8000/admin/users/${currentUser._id}`,
-        {
-          full_name: currentUser.full_name,
-          email: currentUser.email,
-          phone: currentUser.phone,
-          company_name: currentUser.company_name,
-          role: currentUser.role,
-          status: currentUser.status,
-          password: currentUser.password,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      await axios.put(`http://127.0.0.1:8000/admin/users/${currentUser._id}`, currentUser, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setEditModalOpen(false);
       fetchUsers();
-    } catch (error) {
-      console.error("Edit failed:", error);
+    } catch (err) {
+      console.error("Edit error:", err);
     }
   };
 
-  const filteredUsers = users.filter((user) => {
-    const matchRole = roleFilter === "all" || user.role === roleFilter;
+  const filteredUsers = users.filter((u) => {
+    const matchRole = roleFilter === "all" || u.role === roleFilter;
     const matchSearch =
-      user.name.toLowerCase().includes(search.toLowerCase()) ||
-      user.email.toLowerCase().includes(search.toLowerCase());
+      u.name?.toLowerCase().includes(search.toLowerCase()) ||
+      u.email?.toLowerCase().includes(search.toLowerCase());
     return matchRole && matchSearch;
   });
 
   return (
     <div className="flex h-screen">
       <AdminSidebar />
-      <main className="ml-64 flex-1 bg-gray-50 p-6 overflow-y-auto">
-        <h2 className="text-2xl font-bold mb-4 text-gray-800">User Management</h2>
+      <main className="ml-64 flex-1 p-8 pt-16 bg-gradient-to-b from-gray-50 to-white overflow-y-auto">
+        {/* Header */} <Header/>
+        <div className="mb-6">
+          <div className="flex pt-4 items-center gap-3 text-black mb-2">
+            <Users size={28} className="text-black" />
+            <h1 className="text-3xl font-bold">User Management</h1>
+          </div>
+          <p className="text-sm text-gray-500">Manage users, update roles and statuses.</p>
+        </div>
 
         {/* Filters */}
         <div className="flex gap-4 mb-6">
@@ -135,10 +125,10 @@ const UserManagement = () => {
           </select>
         </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto border rounded-md bg-white">
+        {/* User Table */}
+        <div className="overflow-x-auto border rounded-md bg-white shadow">
           <table className="min-w-full text-sm text-left">
-            <thead className="bg-gray-100">
+            <thead className="bg-gray-100 text-gray-700">
               <tr>
                 <th className="px-4 py-2">Name</th>
                 <th className="px-4 py-2">Email</th>
@@ -149,14 +139,14 @@ const UserManagement = () => {
             </thead>
             <tbody>
               {filteredUsers.map((user, i) => (
-                <tr key={i} className="border-t">
+                <tr key={i} className="border-t hover:bg-gray-50">
                   <td className="px-4 py-2">{user.name}</td>
                   <td className="px-4 py-2">{user.email}</td>
                   <td className="px-4 py-2 capitalize">{user.role}</td>
                   <td className="px-4 py-2">
                     <button
                       onClick={() => toggleStatus(user._id)}
-                      className={`px-3 py-1 rounded-full text-sm font-semibold transition ${
+                      className={`px-3 py-1 rounded-full text-xs font-medium transition ${
                         user.status === "active"
                           ? "bg-green-100 text-green-700 hover:bg-green-200"
                           : "bg-red-100 text-red-600 hover:bg-red-200"
@@ -197,78 +187,24 @@ const UserManagement = () => {
 
         {/* Edit Modal */}
         {editModalOpen && currentUser && (
-          <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-[400px] shadow-lg relative">
-              <h3 className="text-lg font-semibold mb-4">Edit User</h3>
-              <form onSubmit={handleEditSubmit} className="space-y-4">
-                <input
-                  name="full_name"
-                  value={currentUser.full_name || ""}
-                  onChange={handleEditChange}
-                  placeholder="Full Name"
-                  className="w-full px-4 py-2 border rounded-md"
-                />
-                <input
-                  name="email"
-                  value={currentUser.email || ""}
-                  onChange={handleEditChange}
-                  placeholder="Email"
-                  className="w-full px-4 py-2 border rounded-md"
-                />
-                <input
-                  name="phone"
-                  value={currentUser.phone || ""}
-                  onChange={handleEditChange}
-                  placeholder="Phone"
-                  className="w-full px-4 py-2 border rounded-md"
-                />
-                <input
-                  name="company_name"
-                  value={currentUser.company_name || ""}
-                  onChange={handleEditChange}
-                  placeholder="Company"
-                  className="w-full px-4 py-2 border rounded-md"
-                />
-                <select
-                  name="role"
-                  value={currentUser.role || ""}
-                  onChange={handleEditChange}
-                  className="w-full px-4 py-2 border rounded-md"
-                >
+          <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-[400px] shadow-xl">
+              <h3 className="text-xl font-semibold mb-4">Edit User</h3>
+              <form onSubmit={handleEditSubmit} className="space-y-3">
+                <input name="full_name" value={currentUser.full_name} onChange={handleEditChange} placeholder="Full Name" className="w-full px-4 py-2 border rounded-md" />
+                <input name="email" value={currentUser.email} onChange={handleEditChange} placeholder="Email" className="w-full px-4 py-2 border rounded-md" />
+                <input name="phone" value={currentUser.phone} onChange={handleEditChange} placeholder="Phone" className="w-full px-4 py-2 border rounded-md" />
+                <input name="company_name" value={currentUser.company_name} onChange={handleEditChange} placeholder="Company" className="w-full px-4 py-2 border rounded-md" />
+                <select name="role" value={currentUser.role} onChange={handleEditChange} className="w-full px-4 py-2 border rounded-md">
                   <option value="admin">Admin</option>
                   <option value="vendor">Vendor</option>
                   <option value="company">Company</option>
                 </select>
-                <input
-                  name="status"
-                  value={currentUser.status || ""}
-                  onChange={handleEditChange}
-                  placeholder="Status"
-                  className="w-full px-4 py-2 border rounded-md"
-                />
-                <input
-                  name="password"
-                  value={currentUser.password || ""}
-                  onChange={handleEditChange}
-                  placeholder="Password"
-                  type="password"
-                  className="w-full px-4 py-2 border rounded-md"
-                />
-
-                <div className="flex justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setEditModalOpen(false)}
-                    className="px-4 py-1 text-gray-600 hover:text-gray-800"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-                  >
-                    Save
-                  </button>
+                <input name="status" value={currentUser.status} onChange={handleEditChange} placeholder="Status" className="w-full px-4 py-2 border rounded-md" />
+                <input name="password" type="password" value={currentUser.password} onChange={handleEditChange} placeholder="Password" className="w-full px-4 py-2 border rounded-md" />
+                <div className="flex justify-end gap-2 pt-2">
+                  <button type="button" onClick={() => setEditModalOpen(false)} className="text-gray-600 hover:text-black">Cancel</button>
+                  <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Save</button>
                 </div>
               </form>
             </div>
@@ -280,6 +216,7 @@ const UserManagement = () => {
 };
 
 export default UserManagement;
+
 
 
 

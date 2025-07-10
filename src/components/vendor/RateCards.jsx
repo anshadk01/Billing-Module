@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import VendorSidebar from "./VendorSidebar";
+import { Tag } from "lucide-react"; // ✅ Icon added
+import Header from "../admin/Header";
 
 const initialForm = {
   company_name: "",
@@ -23,7 +25,6 @@ const RateCards = () => {
   const [form, setForm] = useState(initialForm);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
-
   const token = localStorage.getItem("token");
 
   useEffect(() => {
@@ -71,22 +72,16 @@ const RateCards = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     const payload = {
-      company_name: form.company_name,
-      vehicle_type: form.vehicle_type,
-      package_name: form.package_name,
-      base_rate: Number(form.base_rate) || 0,
-      included_km: Number(form.included_km) || 0,
-      included_hours: Number(form.included_hours) || 0,
-      extra_km_rate: Number(form.extra_km_rate) || 0,
-      extra_hour_rate: Number(form.extra_hour_rate) || 0,
-      waiting_charge_per_minute: Number(form.waiting_charge_per_minute) || 0,
-      buffer_minutes: Number(form.buffer_minutes) || 0,
-      status: form.status || "active",
+      ...form,
+      base_rate: Number(form.base_rate),
+      included_km: Number(form.included_km),
+      included_hours: Number(form.included_hours),
+      extra_km_rate: Number(form.extra_km_rate),
+      extra_hour_rate: Number(form.extra_hour_rate),
+      waiting_charge_per_minute: Number(form.waiting_charge_per_minute),
+      buffer_minutes: Number(form.buffer_minutes),
     };
-
-    console.log("Submitting payload:", payload); // Debugging
 
     try {
       if (editingId) {
@@ -102,12 +97,12 @@ const RateCards = () => {
       setIsModalOpen(false);
     } catch (error) {
       console.error("Submit failed:", error.response?.data || error.message);
-      alert("Failed to save rate card. Check console for details.");
+      alert("Failed to save rate card.");
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this rate card?")) return;
+    if (!window.confirm("Delete this rate card?")) return;
     try {
       await axios.delete(`http://127.0.0.1:8000/rate-cards/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -121,74 +116,83 @@ const RateCards = () => {
   return (
     <div className="flex h-screen">
       <VendorSidebar />
-      <main className="ml-64 flex-1 p-6 bg-gray-50 overflow-y-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-semibold text-gray-800">Rate Cards</h2>
+      <main className="ml-64 flex-1 p-8 pt-16 bg-gradient-to-b from-gray-50 to-white overflow-y-auto">
+        {/* ✅ Header */}<Header/>
+        <div className="mb-6">
+          <div className="flex pt-4 items-center gap-3 text-black mb-2">
+            <Tag size={28} className="text-black" />
+            <h1 className="text-3xl font-bold">Rate Cards</h1>
+          </div>
+          <p className="text-sm text-gray-500">
+            Define corporate rates by vehicle and duty package.
+          </p>
+        </div>
+
+        <div className="flex justify-end mb-4">
           <button
             onClick={() => openModal()}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
           >
             + Add Rate Card
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        {/* ✅ Rate Card Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
           {rateCards.map((card) => (
             <div
               key={card._id}
-              className="relative bg-white p-4 border rounded-lg shadow hover:shadow-md transition"
+              className="relative bg-white border rounded-lg p-5 shadow hover:shadow-md transition"
             >
-              <div className="absolute top-2 right-2 flex gap-2">
+              <div className="absolute top-3 right-3 flex gap-2">
                 <button
                   onClick={() => openModal(card)}
-                  className="text-blue-500 hover:text-blue-700 text-sm"
+                  className="text-blue-600 hover:text-blue-800 text-xs font-medium"
                 >
                   Edit
                 </button>
                 <button
                   onClick={() => handleDelete(card._id)}
-                  className="text-red-500 hover:text-red-700 text-sm"
+                  className="text-red-600 hover:text-red-800 text-xs font-medium"
                 >
                   Delete
                 </button>
               </div>
-
-              <h3 className="text-lg font-bold mb-1">{card.company_name}</h3>
-              <p className="text-sm text-gray-700 mb-1">
-                {card.vehicle_type} • {card.package_name}
+              <h3 className="text-lg font-bold text-gray-800 mb-1">{card.company_name}</h3>
+              <p className="text-sm text-gray-600 mb-1">
+                {card.vehicle_type} | {card.package_name}
               </p>
-              <p className="text-sm">Base Rate: ₹{card.base_rate}</p>
-              <p className="text-sm">
-                Included: {card.included_km} km / {card.included_hours} hr
+              <p className="text-sm text-gray-700">Base Rate: ₹{card.base_rate}</p>
+              <p className="text-sm text-gray-700">
+                Included: {card.included_km} km / {card.included_hours} hrs
               </p>
-              <p className="text-sm">
+              <p className="text-sm text-gray-700">
                 Extra: ₹{card.extra_km_rate}/km | ₹{card.extra_hour_rate}/hr
               </p>
-              <p className="text-sm">
+              <p className="text-sm text-gray-700">
                 Waiting: ₹{card.waiting_charge_per_minute}/min
               </p>
-              <p className="text-sm">Buffer: {card.buffer_minutes} min</p>
+              <p className="text-sm text-gray-700">Buffer: {card.buffer_minutes} mins</p>
             </div>
           ))}
         </div>
 
+        {/* ✅ Modal Form */}
         {isModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl">
-              <h3 className="text-xl font-semibold mb-4">
-                {editingId ? "Edit Rate Card" : "Add New Rate Card"}
-              </h3>
-              <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg w-full max-w-3xl shadow-lg">
+              <h3 className="text-xl font-bold mb-4">{editingId ? "Edit" : "Add"} Rate Card</h3>
+              <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm">Corporate Client *</label>
+                  <label className="text-sm">Company</label>
                   <select
                     name="company_name"
                     value={form.company_name}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-2 border rounded-md"
+                    className="w-full px-3 py-2 border rounded-md"
                   >
-                    <option value="">Select Client</option>
+                    <option value="">-- Select Company --</option>
                     {companies.map((c) => (
                       <option key={c._id} value={c.company_name}>
                         {c.company_name}
@@ -197,25 +201,15 @@ const RateCards = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="text-sm">Package Name *</label>
-                  <input
-                    name="package_name"
-                    value={form.package_name}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border rounded-md"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="text-sm">Vehicle Type *</label>
+                  <label className="text-sm">Vehicle Type</label>
                   <select
                     name="vehicle_type"
                     value={form.vehicle_type}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-2 border rounded-md"
+                    className="w-full px-3 py-2 border rounded-md"
                   >
-                    <option value="">Select Type</option>
+                    <option value="">-- Select Vehicle --</option>
                     {vehicles.map((v) => (
                       <option key={v._id} value={v.vehicle_type}>
                         {v.vehicle_type}
@@ -224,85 +218,84 @@ const RateCards = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="text-sm">Base Rate (₹) *</label>
+                  <label className="text-sm">Package Name</label>
                   <input
-                    type="number"
+                    name="package_name"
+                    value={form.package_name}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border rounded-md"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-sm">Base Rate (₹)</label>
+                  <input
                     name="base_rate"
+                    type="number"
                     value={form.base_rate}
                     onChange={handleChange}
+                    className="w-full px-3 py-2 border rounded-md"
                     required
-                    min="0"
-                    className="w-full px-4 py-2 border rounded-md"
                   />
                 </div>
                 <div>
-                  <label className="text-sm">Included KM *</label>
+                  <label className="text-sm">Included KM</label>
                   <input
-                    type="number"
                     name="included_km"
+                    type="number"
                     value={form.included_km}
                     onChange={handleChange}
-                    required
-                    min="0"
-                    className="w-full px-4 py-2 border rounded-md"
+                    className="w-full px-3 py-2 border rounded-md"
                   />
                 </div>
                 <div>
-                  <label className="text-sm">Included Hours *</label>
+                  <label className="text-sm">Included Hours</label>
                   <input
-                    type="number"
                     name="included_hours"
+                    type="number"
                     value={form.included_hours}
                     onChange={handleChange}
-                    required
-                    min="0"
-                    className="w-full px-4 py-2 border rounded-md"
+                    className="w-full px-3 py-2 border rounded-md"
                   />
                 </div>
                 <div>
-                  <label className="text-sm">Extra KM Rate (₹) *</label>
+                  <label className="text-sm">Extra KM Rate (₹)</label>
                   <input
-                    type="number"
                     name="extra_km_rate"
+                    type="number"
                     value={form.extra_km_rate}
                     onChange={handleChange}
-                    required
-                    min="0"
-                    className="w-full px-4 py-2 border rounded-md"
+                    className="w-full px-3 py-2 border rounded-md"
                   />
                 </div>
                 <div>
-                  <label className="text-sm">Extra Hour Rate (₹) *</label>
+                  <label className="text-sm">Extra Hour Rate (₹)</label>
                   <input
-                    type="number"
                     name="extra_hour_rate"
+                    type="number"
                     value={form.extra_hour_rate}
                     onChange={handleChange}
-                    required
-                    min="0"
-                    className="w-full px-4 py-2 border rounded-md"
+                    className="w-full px-3 py-2 border rounded-md"
                   />
                 </div>
                 <div>
-                  <label className="text-sm">Waiting Charge Per Minute (₹)</label>
+                  <label className="text-sm">Waiting/Min (₹)</label>
                   <input
-                    type="number"
                     name="waiting_charge_per_minute"
+                    type="number"
                     value={form.waiting_charge_per_minute}
                     onChange={handleChange}
-                    min="0"
-                    className="w-full px-4 py-2 border rounded-md"
+                    className="w-full px-3 py-2 border rounded-md"
                   />
                 </div>
                 <div>
                   <label className="text-sm">Buffer Minutes</label>
                   <input
-                    type="number"
                     name="buffer_minutes"
+                    type="number"
                     value={form.buffer_minutes}
                     onChange={handleChange}
-                    min="0"
-                    className="w-full px-4 py-2 border rounded-md"
+                    className="w-full px-3 py-2 border rounded-md"
                   />
                 </div>
                 <div>
@@ -311,7 +304,7 @@ const RateCards = () => {
                     name="status"
                     value={form.status}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border rounded-md"
+                    className="w-full px-3 py-2 border rounded-md"
                   >
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
@@ -321,13 +314,13 @@ const RateCards = () => {
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
-                    className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                    className="text-gray-600 hover:text-black"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded"
+                    className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-md"
                   >
                     Save Rate Card
                   </button>
@@ -342,5 +335,7 @@ const RateCards = () => {
 };
 
 export default RateCards;
+
+
 
 
