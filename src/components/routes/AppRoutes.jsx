@@ -11,6 +11,9 @@ import CommissionOverview from "../admin/CommissionOverview";
 import UploadInvoice from "../vendor/UploadInvoice";
 import InvoiceEntries from "../vendor/InvoiceEntriesModal";
 import ForgotPassword from "../auth/ForgotPassword";
+import RateCards from "../vendor/RateCards";
+import PayoutHistory from "../vendor/PayoutHistory";
+import TripRecords from "../vendor/TripRecords";
 
 const AppRoutes = () => {
   return (
@@ -25,7 +28,9 @@ const AppRoutes = () => {
         <Route path="/admin/commissions" element={<CommissionOverview/>}/>
         <Route path="/vendor/upload-invoice" element={<UploadInvoice/>}/>
         <Route path="/forgot-password" element={<ForgotPassword/>}/>
-        
+        <Route path="/vendor/rate-cards" element={<RateCards/>}/>
+        <Route path="/vendor/payout-history" element={<PayoutHistory/>}/>
+        <Route path="/vendor/trip-records" element={<TripRecords/>}/>
       </Routes>
     </Router>
   );

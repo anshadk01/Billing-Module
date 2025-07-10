@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -7,6 +7,24 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const navigate = useNavigate();
+
+  // ✅ Auto-redirect if token exists
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    if (token && user) {
+      if (user.role === "superadmin") {
+        navigate("/admin-dashboard");
+      } else if (user.role === "vendor") {
+        navigate("/vendor-dashboard");
+      } else if (user.role === "company") {
+        navigate("/company-dashboard");
+      } else {
+        navigate("/");
+      }
+    }
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -24,7 +42,7 @@ const Login = () => {
       if (response.status === 200 && response.data.status) {
         const { access_token, user } = response.data.data;
 
-        // ✅ Save token and user info
+        // ✅ Save token and user info to localStorage
         localStorage.setItem("token", access_token);
         localStorage.setItem("user", JSON.stringify(user));
 
@@ -36,7 +54,7 @@ const Login = () => {
         } else if (user.role === "company") {
           navigate("/company-dashboard");
         } else {
-          navigate("/"); // fallback
+          navigate("/");
         }
       }
     } catch (err) {
@@ -110,10 +128,14 @@ const Login = () => {
               Register
             </Link>
           </p>
-          <p className="mt-2 text-sm  text-blue-600 hover:text-blue-800">
-  <Link to="/forgot-password">Forgot Password?</Link>
-</p>
-
+          <p className="mt-2 text-sm">
+            <Link
+              to="/forgot-password"
+              className="text-blue-600 hover:text-blue-800 transition duration-200"
+            >
+              Forgot Password?
+            </Link>
+          </p>
         </div>
       </form>
     </div>
@@ -121,3 +143,4 @@ const Login = () => {
 };
 
 export default Login;
+
